@@ -15,4 +15,8 @@ func RunMigrations() {
 	if err != nil {
 		log.Fatalf("Failed to initialize migrations: %v", err)
 	}
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("Failed to apply migrations: %v", err)
+	}
 }
