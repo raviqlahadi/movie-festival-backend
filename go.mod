@@ -5,6 +5,7 @@ go 1.22.0
 toolchain go1.22.9
 
 require (
+	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/gorilla/mux v1.7.4
 	github.com/joho/godotenv v1.5.1
