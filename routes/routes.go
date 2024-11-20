@@ -14,11 +14,13 @@ func InitRoutes() *mux.Router {
 	movieRepo := repositories.NewMovieRepository(genreRepo)
 
 	AdminHandler := handlers.AdminHandler{MovieRepo: movieRepo}
+	MovieHandler := handlers.MovieHandler{MovieRepo: movieRepo}
 
 	//router path
 	router.HandleFunc("/admin/movies", AdminHandler.CreateMovie).Methods("POST")
 	router.HandleFunc("/admin/movies/{id}", AdminHandler.UpdateMovie).Methods("PUT")
 	router.HandleFunc("/admin/movies/most-viewed", AdminHandler.GetMostViewedMoviesAndGenreas).Methods("GET")
+	router.HandleFunc("/movies", MovieHandler.ListMovies).Methods("GET")
 
 	return router
 }

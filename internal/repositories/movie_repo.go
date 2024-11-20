@@ -136,6 +136,6 @@ func (r *MovieRepository) GetMostViewedGenre(limit int) ([]GenreViewCount, error
 // Get movies with pagination
 func (r *MovieRepository) GetMoviesWithPagination(offset, limit int) ([]models.Movie, error) {
 	var movies []models.Movie
-	err := db.DB.Offset(offset).Limit(limit).Find(&movies).Error
+	err := db.DB.Preload("Genres").Offset(offset).Limit(limit).Find(&movies).Error
 	return movies, err
 }
