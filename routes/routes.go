@@ -15,6 +15,7 @@ func InitRoutes() *mux.Router {
 
 	//router path
 	router.HandleFunc("/admin/movies", AdminHandler.CreateMovie).Methods("POST")
+	router.HandleFunc("/admin/movies/{id}", AdminHandler.UpdateMovie).Methods("PUT")
 
 	return router
 }

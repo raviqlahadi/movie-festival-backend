@@ -12,6 +12,11 @@ func (r *MovieRepository) CreateMovie(movie models.Movie) error {
 	return db.DB.Create(&movie).Error
 }
 
+// Update movie by id
+func (r *MovieRepository) UpdateMovie(id int, updatedMovie models.Movie) error {
+	return db.DB.Model(&models.Movie{}).Where("id = ?", id).Updates(updatedMovie).Error
+}
+
 // Get most viewed movie
 func (r *MovieRepository) GetMostViewed() (models.Movie, error) {
 	var movie models.Movie
