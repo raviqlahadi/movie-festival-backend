@@ -10,12 +10,15 @@ func InitRoutes() *mux.Router {
 	router := mux.NewRouter()
 
 	//Inject
-	movieRepo := &repositories.MovieRepository{}
+	genreRepo := repositories.NewGenreRepository()
+	movieRepo := repositories.NewMovieRepository(genreRepo)
+
 	AdminHandler := handlers.AdminHandler{MovieRepo: movieRepo}
 
 	//router path
 	router.HandleFunc("/admin/movies", AdminHandler.CreateMovie).Methods("POST")
 	router.HandleFunc("/admin/movies/{id}", AdminHandler.UpdateMovie).Methods("PUT")
+	router.HandleFunc("/admin/movies/most-viewed", AdminHandler.GetMostViewedMoviesAndGenreas).Methods("GET")
 
 	return router
 }

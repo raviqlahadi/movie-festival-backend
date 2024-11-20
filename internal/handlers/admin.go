@@ -15,14 +15,18 @@ type AdminHandler struct {
 }
 
 func (h *AdminHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
-	var movie models.Movie
-	if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
+	var request struct {
+		Movie  models.Movie `json:"movie"`
+		Genres []string     `json:"genres"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.MovieRepo.CreateMovie(movie); err != nil {
-		http.Error(w, "Failed to create movie", http.StatusInternalServerError)
+	if err := h.MovieRepo.CreateMovieWithGenres(request.Movie, request.Genres); err != nil {
+		http.Error(w, "Failed to create movie with genres", http.StatusInternalServerError)
 		return
 	}
 
@@ -31,24 +35,62 @@ func (h *AdminHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AdminHandler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
+	// Extract movie ID
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, "Invalid Movie ID", http.StatusBadRequest)
+		http.Error(w, "Invalid movie ID", http.StatusBadRequest)
 		return
 	}
 
-	var updatedMovie models.Movie
-	if err := json.NewDecoder(r.Body).Decode(&updatedMovie); err != nil {
-		http.Error(w, "Invalid Payload", http.StatusBadRequest)
+	var request struct {
+		Movie  models.Movie `json:"movie"`
+		Genres []string     `json:"genres"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.MovieRepo.UpdateMovie(id, updatedMovie); err != nil {
-		http.Error(w, "Failed to update movie", http.StatusInternalServerError)
+	if err := h.MovieRepo.UpdateMovieWithGenres(id, request.Movie, request.Genres); err != nil {
+		http.Error(w, "Failed to update movie with genres", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Movie updated successfully"})
+}
+
+func (h *AdminHandler) GetMostViewedMoviesAndGenreas(w http.ResponseWriter, r *http.Request) {
+	limitStr := r.URL.Query().Get("limit")
+	limit := 5
+	if limitStr != "" {
+		parsedLimit, err := strconv.Atoi(limitStr)
+		if err != nil {
+			limit = parsedLimit
+		}
+	}
+	// Get most viewed movies
+	movies, err := h.MovieRepo.GetMostViewedMovies(limit)
+	if err != nil {
+		http.Error(w, "Failed to fetch most viewed movies", http.StatusInternalServerError)
+		return
+	}
+
+	// Get most viewed genres
+	genres, err := h.MovieRepo.GetMostViewedGenre(limit)
+	if err != nil {
+		http.Error(w, "Failed to fetch most viewed genre", http.StatusInternalServerError)
+		return
+	}
+
+	//Endpoint response
+	response := map[string]interface{}{
+		"most_viewed_movies": movies,
+		"most_viewed_genres": genres,
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
