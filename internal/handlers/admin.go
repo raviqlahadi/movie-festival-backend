@@ -15,6 +15,13 @@ type AdminHandler struct {
 }
 
 func (h *AdminHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
+	// Check if the user is an admin
+	isAdmin := r.Context().Value("is_admin").(bool)
+	if !isAdmin {
+		http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+		return
+	}
+
 	var request struct {
 		Movie  models.Movie `json:"movie"`
 		Genres []string     `json:"genres"`
@@ -35,6 +42,13 @@ func (h *AdminHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AdminHandler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
+	// Check if the user is an admin
+	isAdmin := r.Context().Value("is_admin").(bool)
+	if !isAdmin {
+		http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+		return
+	}
+
 	// Extract movie ID
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -63,6 +77,13 @@ func (h *AdminHandler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AdminHandler) GetMostViewedMoviesAndGenreas(w http.ResponseWriter, r *http.Request) {
+	// Check if the user is an admin
+	isAdmin := r.Context().Value("is_admin").(bool)
+	if !isAdmin {
+		http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+		return
+	}
+
 	limitStr := r.URL.Query().Get("limit")
 	limit := 5
 	if limitStr != "" {
