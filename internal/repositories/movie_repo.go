@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"strings"
+
 	"github.com/raviqlahadi/movie-festival-backend/internal/db"
 	"github.com/raviqlahadi/movie-festival-backend/internal/models"
 )
@@ -137,5 +139,49 @@ func (r *MovieRepository) GetMostViewedGenre(limit int) ([]GenreViewCount, error
 func (r *MovieRepository) GetMoviesWithPagination(offset, limit int) ([]models.Movie, error) {
 	var movies []models.Movie
 	err := db.DB.Preload("Genres").Offset(offset).Limit(limit).Find(&movies).Error
+	return movies, err
+}
+
+// Get movie by keyword (Title, description or artist)
+func (r *MovieRepository) SearchMovies(query string, offset, limit int) ([]models.Movie, error) {
+	if limit < 1 {
+		limit = 10
+	} else if limit > 100 {
+		limit = 100
+	}
+
+	var movies []models.Movie
+
+	// Perform a case-insensitive search in title, description, or artists
+	err := db.DB.Preload("Genres").
+		Where("LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(artists) LIKE ?",
+			"%"+strings.ToLower(query)+"%",
+			"%"+strings.ToLower(query)+"%",
+			"%"+strings.ToLower(query)+"%",
+		).
+		Offset(offset).Limit(limit).
+		Find(&movies).Error
+
+	return movies, err
+}
+
+// Get movie by Genres
+func (r *MovieRepository) SearchMoviesByGenre(genre string, offset, limit int) ([]models.Movie, error) {
+	if limit < 1 {
+		limit = 10
+	} else if limit > 100 {
+		limit = 100
+	}
+
+	var movies []models.Movie
+
+	// Perform a search based on genre
+	err := db.DB.Preload("Genres").
+		Joins("JOIN movie_genres mg ON mg.movie_id = movies.id").
+		Joins("JOIN genres g ON mg.genre_id = g.id").
+		Where("LOWER(g.name) LIKE ?", "%"+strings.ToLower(genre)+"%").
+		Offset(offset).Limit(limit).
+		Find(&movies).Error
+
 	return movies, err
 }

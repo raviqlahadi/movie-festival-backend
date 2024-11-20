@@ -21,6 +21,7 @@ func InitRoutes() *mux.Router {
 	router.HandleFunc("/admin/movies/{id}", AdminHandler.UpdateMovie).Methods("PUT")
 	router.HandleFunc("/admin/movies/most-viewed", AdminHandler.GetMostViewedMoviesAndGenreas).Methods("GET")
 	router.HandleFunc("/movies", MovieHandler.ListMovies).Methods("GET")
+	router.HandleFunc("/movies/search", MovieHandler.SearchMovies).Methods("GET")
 
 	return router
 }
