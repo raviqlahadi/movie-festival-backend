@@ -5,6 +5,7 @@ import (
 
 	"github.com/raviqlahadi/movie-festival-backend/internal/db"
 	"github.com/raviqlahadi/movie-festival-backend/internal/models"
+	"gorm.io/gorm"
 )
 
 type MovieRepository struct {
@@ -184,4 +185,35 @@ func (r *MovieRepository) SearchMoviesByGenre(genre string, offset, limit int) (
 		Find(&movies).Error
 
 	return movies, err
+}
+
+// Track viewership
+func (r *MovieRepository) TrackViewership(movieID int, userID *int, watchTime int) error {
+	tx := db.DB.Begin()
+
+	// Increment the movie view count
+	if err := tx.Model(&models.Movie{}).Where("id = ?", movieID).Update("view_count", gorm.Expr("view_count + 1")).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Log the view in the viewership table
+	viewership := models.Viewership{
+		MovieID:   movieID,
+		UserID:    userID, // Nullable
+		WatchTime: watchTime,
+	}
+	if err := tx.Create(&viewership).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
+}
+
+// check if movie id is valid
+func (r *MovieRepository) IsMovieExists(movieID int) (bool, error) {
+	var count int64
+	err := db.DB.Model(&models.Movie{}).Where("id = ?", movieID).Count(&count).Error
+	return count > 0, err
 }
