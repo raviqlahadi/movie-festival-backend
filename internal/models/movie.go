@@ -13,4 +13,5 @@ type Movie struct {
 	Genres      []Genre `json:"genres" gorm:"many2many:movie_genres"`
 	WatchURL    string  `json:"watch_url" gorm:"not null"`
 	ViewCount   int     `json:"view_count" gorm:"default:0"`
+	Year        int     `json:"year" gorm:"not null"`
 }

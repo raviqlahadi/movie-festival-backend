@@ -155,10 +155,11 @@ func (r *MovieRepository) SearchMovies(query string, offset, limit int) ([]model
 
 	// Perform a case-insensitive search in title, description, or artists
 	err := db.DB.Preload("Genres").
-		Where("LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(artists) LIKE ?",
+		Where("LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(artists) LIKE ? OR year=?",
 			"%"+strings.ToLower(query)+"%",
 			"%"+strings.ToLower(query)+"%",
 			"%"+strings.ToLower(query)+"%",
+			query,
 		).
 		Offset(offset).Limit(limit).
 		Find(&movies).Error
