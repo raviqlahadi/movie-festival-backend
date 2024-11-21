@@ -86,15 +86,27 @@ func (h *VoteHandler) MostVotedMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	movie, voteCount, err := h.VoteRepo.GetMostVotedMovie()
+	// Get query parameters
+	query := r.URL.Query()
+	page, err := strconv.Atoi(query.Get("page"))
+	if err != nil || page <= 0 {
+		page = 1 // Default page
+	}
+	limit, err := strconv.Atoi(query.Get("limit"))
+	if err != nil || limit <= 0 {
+		limit = 10 // Default limit
+	}
+
+	movies, err := h.VoteRepo.GetMostVotedMovies(page, limit)
 	if err != nil {
-		http.Error(w, "Failed to fetch the most voted movie", http.StatusInternalServerError)
+		http.Error(w, "Failed to fetch the most voted movies", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"movie":      movie,
-		"vote_count": voteCount,
+		"movies": movies,
+		"page":   page,
+		"limit":  limit,
 	})
 }
