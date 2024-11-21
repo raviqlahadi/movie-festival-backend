@@ -38,31 +38,45 @@ func (r *VoteRepository) RemoveVote(userID, movieID uint) error {
 func (r *VoteRepository) GetUserVotes(userID uint) ([]models.Movie, error) {
 	var movies []models.Movie
 	err := db.DB.Model(&models.Movie{}).
+		Select("movies.*").
 		Joins("JOIN votes ON votes.movie_id = movies.id").
+		Joins("LEFT JOIN movie_genres ON movie_genres.movie_id = movies.id").
+		Joins("LEFT JOIN genres ON genres.id = movie_genres.genre_id").
 		Where("votes.user_id = ?", userID).
+		Preload("Genres").
 		Find(&movies).Error
+
 	return movies, err
 }
 
 // Get the most voted movie
 func (r *VoteRepository) GetMostVotedMovie() (*models.Movie, int64, error) {
-	var result struct {
-		models.Movie
-		VoteCount int64 `json:"vote_count"`
-	}
+	var movie models.Movie
+	var voteCount int64
 
 	err := db.DB.Model(&models.Movie{}).
 		Select("movies.*, COUNT(votes.id) AS vote_count").
 		Joins("JOIN votes ON votes.movie_id = movies.id").
+		Joins("LEFT JOIN movie_genres ON movie_genres.movie_id = movies.id").
+		Joins("LEFT JOIN genres ON genres.id = movie_genres.genre_id").
 		Group("movies.id").
 		Order("vote_count DESC").
+		Preload("Genres"). // Preload genres for the movie
 		Limit(1).
-		Scan(&result).
-		Error
+		Find(&movie).Error
 
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return &result.Movie, result.VoteCount, nil
+	// Get the vote count
+	err = db.DB.Model(&models.Vote{}).
+		Where("movie_id = ?", movie.ID).
+		Count(&voteCount).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return &movie, voteCount, nil
 }
