@@ -50,9 +50,11 @@ func (r *VoteRepository) GetUserVotes(userID uint) ([]models.Movie, error) {
 }
 
 // Get the most voted movie
-func (r *VoteRepository) GetMostVotedMovie() (*models.Movie, int64, error) {
-	var movie models.Movie
-	var voteCount int64
+func (r *VoteRepository) GetMostVotedMovies(page, limit int) ([]map[string]interface{}, error) {
+	var results []map[string]interface{}
+
+	// Calculate offset
+	offset := (page - 1) * limit
 
 	err := db.DB.Model(&models.Movie{}).
 		Select("movies.*, COUNT(votes.id) AS vote_count").
@@ -61,22 +63,10 @@ func (r *VoteRepository) GetMostVotedMovie() (*models.Movie, int64, error) {
 		Joins("LEFT JOIN genres ON genres.id = movie_genres.genre_id").
 		Group("movies.id").
 		Order("vote_count DESC").
-		Preload("Genres"). // Preload genres for the movie
-		Limit(1).
-		Find(&movie).Error
+		Offset(offset).
+		Limit(limit).
+		Preload("Genres"). // Preload genres for each movie
+		Find(&results).Error
 
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// Get the vote count
-	err = db.DB.Model(&models.Vote{}).
-		Where("movie_id = ?", movie.ID).
-		Count(&voteCount).Error
-
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return &movie, voteCount, nil
+	return results, err
 }
