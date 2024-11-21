@@ -26,7 +26,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		Username string `json:"username"`
 		Email    string `json:"email"`
-		Password string `json:"passowrd"`
+		Password string `json:"password"`
 		IsAdmin  bool   `json:"is_admin"`
 	}
 
